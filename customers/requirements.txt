@@ -1,0 +1,5 @@
+beanie==1.11.1
+email-validator==1.2.1
+grpcio==1.46.3
+grpcio-tools==1.46.3
+motor==2.5.1

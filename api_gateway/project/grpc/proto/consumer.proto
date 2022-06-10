@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package consumer;
+
+import "google/protobuf/empty.proto";
+
+
+message ConsumerID {
+    string id = 1;
+}
+
+message ConsumerUserName {
+    string username = 1;
+}
+
+message ConsumerStatus {
+    bool is_active = 1;
+    bool is_verified = 2;
+    bool status_set = 3;
+}
+
+message Consumer {
+  string username = 1;
+  string full_name = 2;
+  string email = 3;
+  string hashed_password = 4;
+  string created_at = 5;
+  ConsumerStatus consumer_status = 6;
+}
+
+message ConsumerOut {
+  string id = 1;
+  string username = 2;
+  string email = 3;
+  string created_at = 4;
+  ConsumerStatus consumer_status = 5;
+}
+
+message UpdateConsumer {
+  string username = 1;
+  string new_full_name = 2;
+  string new_email = 3;
+}
+
+message UpdateStatus {
+  ConsumerUserName consumer_username = 1;
+  ConsumerStatus consumer_status = 2;
+}
+
+service UserAPI {
+  rpc GetUserByID (ConsumerID) returns (Consumer);
+
+  rpc GetUserByUserName (ConsumerUserName) returns (Consumer);
+
+  rpc CreateUser (Consumer) returns (ConsumerOut);
+
+  rpc UpdateUser (UpdateConsumer) returns (ConsumerOut);
+
+  rpc UpdateConsumerStatus (UpdateStatus) returns (ConsumerOut);
+
+  rpc DeleteUser (ConsumerUserName) returns (google.protobuf.Empty);
+}
