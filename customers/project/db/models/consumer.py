@@ -1,13 +1,13 @@
 from datetime import date
 
 from pydantic import EmailStr
-from beanie import Document
+from beanie import Document, Indexed
 
 
 class Consumer(Document):
-    username: str
+    username: Indexed(str, unique=True)
     full_name: str
-    email: EmailStr
+    email: Indexed(EmailStr, unique=True)
     hashed_password: str
     created_at: str
     is_active: bool = False

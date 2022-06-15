@@ -27,7 +27,7 @@ async def register(new_user: User) -> dict:
     except grpc.RpcError as e:
         if e.code().name == "ALREADY_EXISTS":
             raise HTTPException(status_code=status.HTTP_409_CONFLICT,
-                                detail='User is already registered')
+                                detail="User already exists")
 
 
 @router.post('/login', response_model=Token)
@@ -39,18 +39,19 @@ async def login_for_access_token(user_credentials: OAuth2PasswordRequestForm = D
 
     try:
         curr_user = await grpc_consumer.get_user_by_username(username=user_credentials.username)
-        verified_password = authenticator.verify_password(user_credentials.password, curr_user.hashed_password)
+        verified_password = authenticator.verify_password(user_credentials.password, curr_user.get('hashed_password'))
 
         # Raise exception if password is not correct or user is inactive
-        if not (verified_password and curr_user.consumer_status.is_active):
+        if not (verified_password and curr_user.get('consumer_status').get('is_active')):
             raise exception_credentials
 
-        access_token = authenticator.create_access_token(data={'sub': curr_user.username})
+        access_token = authenticator.create_access_token(data={'sub': curr_user['username']})
 
         # Update consumer status
         await grpc_consumer.update_status(username=user_credentials.username, is_active=True, is_verified=True)
 
         return {'access_token': access_token, 'token_type': 'bearer'}
     except grpc.RpcError as e:
+
         if e.code().name == 'NOT_FOUND':
             raise exception_credentials

@@ -1,6 +1,6 @@
 import os
 
-from project.app.models import Consumer
+from project.db.models.consumer import Consumer
 
 import motor.motor_asyncio
 from pydantic import EmailStr
@@ -8,16 +8,16 @@ from beanie import init_beanie, PydanticObjectId
 
 
 class ConsumerDB:
-    """Initialize database and implement CRUD operations on it"""
+    """Initialize database and implement CRUD operations"""
 
     def __init__(self):
-        self._host_port = os.getenv("MONGODB_HOST_PORT")
+        self._host_port = os.getenv('MONGODB_HOST_PORT')
         self.client = None
         self.db = None
 
     async def initialize_db(self):
         self.client = motor.motor_asyncio.AsyncIOMotorClient(self._host_port)
-        self.db = self.client.consumer
+        self.db = self.client.test
         await init_beanie(database=self.db, document_models=[Consumer])
 
     async def create_user(self,
