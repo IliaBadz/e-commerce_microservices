@@ -17,7 +17,7 @@ This repository implements microservices based e-commerce app. Currently, it is 
 **Note**: It is assumed that you have installed [Docker](https://www.docker.com/) and [MongoDB server](https://www.mongodb.com/) 
 (server should listen to the standard MongoDB port, 27017).
 
-1. Update api_gateway/.env file:
-   1. Run in terminal `openssl rand -hex 32` and paste generated key to the `SECRET_KEY`.
+1. Update `api_gateway/.env` file:
+   1. Run in terminal `openssl rand -hex 32` and paste generated key to the `JWT_SECRET_KEY`.
 2. Run following command from the root: `docker-compose up --build`.
 3. Open your browser at http://localhost:8000/docs to see API documentation.

@@ -1,12 +1,13 @@
 import os
 from typing import Optional
 
-from . import add_UserAPIServicer_to_server, user_api_servicer, UserAPIServicer
+from project.grpc.proto.consumer_pb2_grpc import add_UserAPIServicer_to_server
+from . import user_api_servicer, UserAPIServicer
 
 import grpc
 
 
-class GrpcServerRouter:
+class GrpcServerConfig:
     """Router for starting up a gRPC server"""
 
     def __init__(self):

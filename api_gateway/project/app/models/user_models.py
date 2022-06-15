@@ -7,7 +7,7 @@ from pydantic import BaseModel, Field, EmailStr
 class User(BaseModel):
     username: str
     full_name: Union[str, None] = None
-    email: Union[EmailStr, None] = None
+    email: EmailStr
     password: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = False

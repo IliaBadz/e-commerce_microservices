@@ -1,19 +1,22 @@
-import os
 import datetime
 
-from . import Consumer, UpdateConsumer, ConsumerUserName, \
-    ConsumerStatus, ConsumerID, GrpcClientConfig, UpdateStatus
+from . import (Consumer, UpdateConsumer,
+               ConsumerUserName, ConsumerStatus,
+               ConsumerID, UpdateStatus,
+               UserAPIStub, GrpcClientConfig, settings)
 
+
+import grpc
 from google.protobuf.json_format import MessageToDict
 
 
 class GrpcConsumer:
-    GRPC_SERVER_ADDRESS = os.getenv("GRPC_SERVER_ADDRESS")
+    """Implements `UserAPI` service methods for making RPC requests"""
 
     def __init__(self):
-        self.grpc_client = GrpcClientConfig()
-        self._channel = self.grpc_client.create_channel(self.GRPC_SERVER_ADDRESS)
-        self._stub = self.grpc_client.get_stub()
+        self.grpc_client: GrpcClientConfig = GrpcClientConfig()
+        self._channel: grpc.aio.Channel = self.grpc_client.create_channel(settings.GRPC_SERVER_ADDRESS)
+        self._stub: UserAPIStub = self.grpc_client.get_stub()
 
     async def get_user_by_id(self, user_id: str) -> dict:
         consumer = await self._stub.GetUserByID(ConsumerID(id=user_id))
@@ -21,7 +24,7 @@ class GrpcConsumer:
 
     async def get_user_by_username(self, username: str):
         consumer = await self._stub.GetUserByUserName(ConsumerUserName(username=username))
-        return consumer
+        return MessageToDict(message=consumer, preserving_proto_field_name=True)
 
     async def create_user(self, username: str,
                           full_name: str,
@@ -30,7 +33,6 @@ class GrpcConsumer:
                           created_at: datetime.datetime,
                           is_active: bool = False,
                           is_verified: bool = False) -> dict:
-
         grpc_request = Consumer(username=username,
                                 full_name=full_name,
                                 email=email,
@@ -38,9 +40,7 @@ class GrpcConsumer:
                                 created_at=created_at.strftime("%m/%d/%Y, %H:%M:%S"),
                                 consumer_status=ConsumerStatus(is_active=is_active,
                                                                is_verified=is_verified))
-
         consumer = await self._stub.CreateUser(grpc_request)
-
         return MessageToDict(message=consumer, preserving_proto_field_name=True)
 
     async def update_user(self, username: str, full_name: str, email: str) -> dict:

@@ -1,8 +1,10 @@
+from project.db.consumer_db import ConsumerDB
 from project.grpc.proto import consumer_pb2_grpc
-from . import Consumer, ConsumerOut, ConsumerStatus, ConsumerDB, UpdateStatus, \
-    UpdateConsumer, ConsumerUserName, ConsumerID
+from project.grpc.proto.consumer_pb2 import (Consumer, ConsumerOut, ConsumerStatus,
+                                             UpdateStatus, UpdateConsumer, ConsumerUserName, ConsumerID)
 
 import grpc
+import pymongo
 
 
 class UserAPIServicer(consumer_pb2_grpc.UserAPIServicer):
@@ -15,7 +17,7 @@ class UserAPIServicer(consumer_pb2_grpc.UserAPIServicer):
         await self._consumer_db.initialize_db()
 
     async def GetUserByID(self, request: ConsumerID, context: grpc.aio.ServicerContext):
-        """Find consumer by its ID"""
+        """Finds consumer by its ID"""
 
         consumer_in_db = await self._consumer_db.get_user_by_id(request.id)
         return Consumer(username=consumer_in_db.username,
@@ -27,8 +29,7 @@ class UserAPIServicer(consumer_pb2_grpc.UserAPIServicer):
                                                        is_verified=consumer_in_db.is_verified))
 
     async def GetUserByUserName(self, request: ConsumerUserName, context: grpc.aio.ServicerContext):
-        """Find consumer by its username"""
-
+        """Finds consumer by its username"""
         consumer_in_db = await self._consumer_db.get_user_by_username(request.username)
 
         # Abort an gRPC error if user is not in db
@@ -55,20 +56,17 @@ class UserAPIServicer(consumer_pb2_grpc.UserAPIServicer):
                                     'created_at': request.created_at,
                                     'is_active': request.consumer_status.is_active,
                                     'is_verified': request.consumer_status.is_verified}
+        try:
 
-        # Try to get consumer by username
-        consumer_in_db = await self._consumer_db.get_user_by_username(
-            username=new_consumer_credentials.get('username')
-        )
+            # Create new consumer
+            await self._consumer_db.create_user(**new_consumer_credentials)
 
-        # Abort an gRPC error if consumer already exists
-        if consumer_in_db:
-            context.set_details('User already exists')
+        except pymongo.errors.DuplicateKeyError as e:
+
+            # Abort an gRPC error if consumer already exists
+            context.set_details('User with such credentials already exists')
             context.set_code(grpc.StatusCode.ALREADY_EXISTS)
             return ConsumerOut()
-
-        # Create new consumer
-        await self._consumer_db.create_user(**new_consumer_credentials)
 
         consumer_in_db = await self._consumer_db.get_user_by_username(new_consumer_credentials.get('username'))
 
@@ -95,6 +93,7 @@ class UserAPIServicer(consumer_pb2_grpc.UserAPIServicer):
                                                           is_verified=updated_consumer.is_verified))
 
     async def UpdateConsumerStatus(self, request: UpdateStatus, context):
+        """Update consumer status"""
         updated_consumer = await self._consumer_db.update_status(username=request.consumer_username.username,
                                                                  is_active=request.consumer_status.is_active,
                                                                  is_verified=request.consumer_status.is_verified)
